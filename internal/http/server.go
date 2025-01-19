@@ -2,42 +2,50 @@ package http
 
 import (
 	"fmt"
-	cim "github.com/LucxLab/cim-service/internal"
-	upload "github.com/LucxLab/cim-service/internal/cdr"
+	"github.com/LucxLab/cim-service/internal/cdr"
+	"github.com/LucxLab/cim-service/internal/minio"
+	objStorageRepository "github.com/LucxLab/cim-service/internal/minio/repository"
 	"github.com/LucxLab/cim-service/internal/mongo"
-	"github.com/LucxLab/cim-service/internal/mongo/cdr"
-	"github.com/gorilla/mux"
+	dbRepository "github.com/LucxLab/cim-service/internal/mongo/repository"
 	"net/http"
 )
 
-type Server struct {
-	Address  string
-	database cim.Database
-	router   *mux.Router
+type Server interface {
+	Listen() error
+	Close() error
 }
 
-func (s *Server) Listen() error {
-	fmt.Println("Server listening on", s.Address)
-	return http.ListenAndServe(s.Address, s.router)
+type server struct {
+	http *http.Server
 }
 
-func (s *Server) Close() error {
-	return s.database.Close()
+func (s *server) Listen() error {
+	fmt.Println("Server listening on", s.http.Addr)
+	return s.http.ListenAndServe()
 }
 
-func NewServer(address string) *Server {
-	database := mongo.NewDatabase()
+func (s *server) Close() error {
+	return nil
+}
 
-	// Repositories
-	cdrRepository := cdr.NewRepository(database)
+func New(address string) Server {
+	mongoDatabase := mongo.NewDatabase()
+	minioObjectStorage := minio.NewStorage()
+
+	// Database Repositories
+	cdrDatabaseRepository := dbRepository.NewMongoCDR(mongoDatabase)
+
+	// Object Storage Repositories
+	cdrObjStorageRepository := objStorageRepository.NewMinioCdr(minioObjectStorage)
 
 	// Services
-	uploadService := upload.NewService(cdrRepository)
+	cdrService := cdr.NewService(cdrDatabaseRepository, cdrObjStorageRepository)
 
-	router := setupRouter(uploadService)
-	return &Server{
-		Address:  address,
-		database: database,
-		router:   router,
+	router := NewRouter(cdrService)
+	return &server{
+		http: &http.Server{
+			Addr:    address,
+			Handler: router,
+		},
 	}
 }

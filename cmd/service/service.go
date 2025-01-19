@@ -8,18 +8,18 @@ import (
 )
 
 func main() {
-	server := http.NewServer(":8000")
+	apiServer := http.New(":8000")
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		if err := server.Listen(); err != nil {
+		if err := apiServer.Listen(); err != nil {
 			panic(err)
 		}
 	}()
 
 	<-stop
-	if err := server.Close(); err != nil {
+	if err := apiServer.Close(); err != nil {
 		panic(err)
 	}
 }
