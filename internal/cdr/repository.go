@@ -8,5 +8,5 @@ type DatabaseRepository interface {
 }
 
 type ObjectStorageRepository interface {
-	SaveObject(bucketName string, objectName string, objectSize int64, reader io.Reader) error
+	SaveCdrFile(objectName string, objectSize int64, reader io.Reader) error
 }

@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const cdrUploadCollection = "cdr_uploads"
+const cdrUploadCollection = "cdr_files"
 
 type mongoCdr struct {
 	database *mongo.Database
@@ -16,9 +16,12 @@ type mongoCdr struct {
 
 func (c *mongoCdr) CreateUpload(upload *cdr.Upload) error {
 	collection := c.database.Cim.Collection(cdrUploadCollection)
-	uploadData := data.FromUpload(upload)
+	createUploadData, err := data.ToCreateUpload(upload)
+	if err != nil {
+		return err
+	}
 
-	insertResult, err := collection.InsertOne(context.TODO(), uploadData)
+	insertResult, err := collection.InsertOne(context.TODO(), createUploadData)
 	if err != nil {
 		return err
 	}
@@ -30,14 +33,14 @@ func (c *mongoCdr) CreateUpload(upload *cdr.Upload) error {
 
 func (c *mongoCdr) UpdateUpload(upload *cdr.Upload) error {
 	collection := c.database.Cim.Collection(cdrUploadCollection)
-	uploadData := data.FromUpload(upload)
+	updateUploadData := data.ToUpdateUpload(upload)
 
 	objectId, err := bson.ObjectIDFromHex(upload.Id)
 	if err != nil {
 		return err
 	}
 
-	updateAction := bson.M{"$set": uploadData}
+	updateAction := bson.M{"$set": updateUploadData}
 	_, err = collection.UpdateByID(context.TODO(), objectId, updateAction)
 	if err != nil {
 		return err

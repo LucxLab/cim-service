@@ -13,6 +13,6 @@ func NewRouter(cdrService cdr.Service) *http.ServeMux {
 	router.HandleFunc("GET /health", healthHandler.GlobalStatus)
 
 	cdrHandler := handler.NewCdrHandler(cdrService)
-	router.HandleFunc("POST /cdr", cdrHandler.UploadFile)
+	router.HandleFunc("POST /companies/{company_id}/cdr-files", cdrHandler.UploadFile)
 	return router
 }

@@ -8,12 +8,14 @@ import (
 	"io"
 )
 
+const cdrFilesBucketName = "cdr-files"
+
 type minioCdr struct {
 	storage *minio.ObjectStorage
 }
 
-func (m *minioCdr) SaveObject(bucketName string, objectName string, objectSize int64, reader io.Reader) error {
-	_, err := m.storage.Client.PutObject(context.TODO(), bucketName, objectName, reader, objectSize, mn.PutObjectOptions{})
+func (m *minioCdr) SaveCdrFile(objectName string, objectSize int64, reader io.Reader) error {
+	_, err := m.storage.Client.PutObject(context.TODO(), cdrFilesBucketName, objectName, reader, objectSize, mn.PutObjectOptions{})
 	if err != nil {
 		return err
 	}
