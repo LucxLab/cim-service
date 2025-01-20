@@ -7,11 +7,11 @@ import (
 	"net/http"
 )
 
-type handler struct {
+type cdrHandler struct {
 	service cdr.Service
 }
 
-func (h *handler) UploadFile(w http.ResponseWriter, r *http.Request) {
+func (h *cdrHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	file, headers, err := r.FormFile("file")
 	if err != nil {
 		json.BadRequest(w)
@@ -33,7 +33,7 @@ func (h *handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewCdrHandler(service cdr.Service) cdr.Handler {
-	return &handler{
+	return &cdrHandler{
 		service: service,
 	}
 }
