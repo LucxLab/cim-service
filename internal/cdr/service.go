@@ -4,23 +4,29 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 )
 
 type Service interface {
-	UploadFile(file io.Reader, size int64, fileName string, companyId string) (*Upload, error)
+	UploadFile(file io.Reader, size int64, fileName string, organizationId string, userId string) (*Upload, error)
 }
 
 type service struct {
 	databaseRepository   DatabaseRepository
 	objStorageRepository ObjectStorageRepository
+	publisher            Publisher
 }
 
-func (s *service) UploadFile(file io.Reader, size int64, fileName string, companyId string) (*Upload, error) {
+func (s *service) UploadFile(file io.Reader, size int64, fileName string, organizationId string, userId string) (*Upload, error) {
 	uploadTitle := removeFileExtension(fileName)
+	timeNow := time.Now().UTC().Format(time.RFC3339)
 	upload := &Upload{
-		CompanyId: companyId,
-		Title:     uploadTitle,
-		Status:    CreatedUploadStatus,
+		OrganizationId: organizationId,
+		UserId:         userId,
+		Title:          uploadTitle,
+		Status:         CreatedUploadStatus,
+		CreatedAt:      timeNow,
+		UpdatedAt:      timeNow,
 	}
 
 	err := s.databaseRepository.CreateUpload(upload)
@@ -28,23 +34,38 @@ func (s *service) UploadFile(file io.Reader, size int64, fileName string, compan
 		return nil, err
 	}
 
-	uploadLocation := fmt.Sprintf("%s/%s", companyId, upload.Id)
+	uploadLocation := fmt.Sprintf("%s/%s", organizationId, upload.Id)
 	err = s.objStorageRepository.SaveCdrFile(uploadLocation, size, file)
 	if err != nil {
 		return nil, err
 	}
 
+	timeNow = time.Now().UTC().Format(time.RFC3339)
 	upload.Location = uploadLocation
 	upload.Status = SucceededUploadStatus
+	upload.UpdatedAt = timeNow
 	err = s.databaseRepository.UpdateUpload(upload)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.publisher.PublishUploadCreated(upload)
 	if err != nil {
 		return nil, err
 	}
 	return upload, nil
 }
 
-func NewService(databaseRepository DatabaseRepository, objStorageRepository ObjectStorageRepository) Service {
-	return &service{databaseRepository: databaseRepository, objStorageRepository: objStorageRepository}
+func NewService(
+	databaseRepository DatabaseRepository,
+	objStorageRepository ObjectStorageRepository,
+	publisher Publisher,
+) Service {
+	return &service{
+		databaseRepository:   databaseRepository,
+		objStorageRepository: objStorageRepository,
+		publisher:            publisher,
+	}
 }
 
 // removeFileExtension removes the file extension from the file name

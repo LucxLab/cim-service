@@ -7,6 +7,8 @@ import (
 	objStorageRepository "github.com/LucxLab/cim-service/internal/minio/repository"
 	"github.com/LucxLab/cim-service/internal/mongo"
 	dbRepository "github.com/LucxLab/cim-service/internal/mongo/repository"
+	"github.com/LucxLab/cim-service/internal/rabbitmq"
+	"github.com/LucxLab/cim-service/internal/rabbitmq/publisher"
 	"net/http"
 )
 
@@ -31,6 +33,7 @@ func (s *server) Close() error {
 func New(address string) Server {
 	mongoDatabase := mongo.NewDatabase()
 	minioObjectStorage := minio.NewStorage()
+	rabbitmqPublisher := rabbitmq.NewPublisher()
 
 	// Database Repositories
 	cdrDatabaseRepository := dbRepository.NewMongoCDR(mongoDatabase)
@@ -38,8 +41,11 @@ func New(address string) Server {
 	// Object Storage Repositories
 	cdrObjStorageRepository := objStorageRepository.NewMinioCdr(minioObjectStorage)
 
+	// Publishers
+	cdrPublisher := publisher.NewRabbitmqCdr(rabbitmqPublisher)
+
 	// Services
-	cdrService := cdr.NewService(cdrDatabaseRepository, cdrObjStorageRepository)
+	cdrService := cdr.NewService(cdrDatabaseRepository, cdrObjStorageRepository, cdrPublisher)
 
 	router := NewRouter(cdrService)
 	return &server{

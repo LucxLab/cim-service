@@ -17,6 +17,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect

@@ -1,11 +1,14 @@
 package cdr
 
 type Upload struct {
-	Id        string
-	CompanyId string
-	Title     string
-	Location  string
-	Status    UploadStatus
+	Id             string
+	OrganizationId string
+	UserId         string
+	Title          string
+	Location       string
+	Status         UploadStatus
+	CreatedAt      string
+	UpdatedAt      string
 }
 
 type UploadStatus string

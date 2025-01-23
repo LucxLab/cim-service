@@ -12,8 +12,14 @@ type cdrHandler struct {
 }
 
 func (h *cdrHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
-	companyId := r.PathValue("company_id")
-	if companyId == "" {
+	organizationId := r.PathValue("organization_id")
+	if organizationId == "" {
+		json.BadRequest(w)
+		return
+	}
+
+	userId := r.Header.Get("X-User-Id")
+	if userId == "" {
 		json.BadRequest(w)
 		return
 	}
@@ -24,7 +30,7 @@ func (h *cdrHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upload, err := h.service.UploadFile(file, headers.Size, headers.Filename, companyId)
+	upload, err := h.service.UploadFile(file, headers.Size, headers.Filename, organizationId, userId)
 	if err != nil {
 		json.UnexpectedError(w, err)
 		return
