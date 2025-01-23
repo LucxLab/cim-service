@@ -35,7 +35,7 @@ func ToCreateUpload(upload *cdr.Upload) (*CreateUpload, error) {
 		OrganizationId: organizationObjectId,
 		UserId:         userObjectId,
 		Title:          upload.Title,
-		Status:         string(upload.Status),
+		Status:         upload.Status.String(),
 		CreatedAt:      upload.CreatedAt,
 		UpdatedAt:      upload.UpdatedAt,
 	}, nil
@@ -44,7 +44,7 @@ func ToCreateUpload(upload *cdr.Upload) (*CreateUpload, error) {
 func ToUpdateUpload(upload *cdr.Upload) *UpdateUpload {
 	return &UpdateUpload{
 		Location:  upload.Location,
-		Status:    string(upload.Status),
+		Status:    upload.Status.String(),
 		UpdatedAt: upload.UpdatedAt,
 	}
 }

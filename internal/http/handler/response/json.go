@@ -1,4 +1,4 @@
-package json
+package response
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func Response(w http.ResponseWriter, httpStatus int, data interface{}) error {
+func Json(w http.ResponseWriter, httpStatus int, data interface{}) error {
 	return writeJson(w, httpStatus, data)
 }
 

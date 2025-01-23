@@ -7,9 +7,9 @@ type CreateUpload struct {
 	Status string `json:"status"`
 }
 
-func FromUpload(upload *cdr.Upload) *CreateUpload {
+func ToCreatedUpload(upload *cdr.Upload) *CreateUpload {
 	return &CreateUpload{
 		Id:     upload.Id,
-		Status: string(upload.Status),
+		Status: upload.Status.String(),
 	}
 }
