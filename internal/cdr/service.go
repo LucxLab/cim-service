@@ -22,35 +22,34 @@ func (s *service) UploadCdrFile(
 	userId string,
 ) (*FileMetadata, error) {
 	fileTitle := removeFileExtension(fileName)
-	fileMetadata := &FileMetadata{
-		OrganizationId:   organizationId,
-		UserId:           userId,
-		Title:            fileTitle,
-		ProcessingStatus: CreatedFileProcessingStatus,
+	fileMetadata := newFileMetadata(organizationId, userId, fileTitle)
+
+	// Save the file metadata in the database.
+	if databaseErr := s.databaseRepository.CreateFileMetadata(fileMetadata); databaseErr != nil {
+		return nil, databaseErr
 	}
 
-	err := s.databaseRepository.CreateCdrFileMetadata(fileMetadata)
-	if err != nil {
-		return nil, err
-	}
-
+	// Save the file in the object storage.
 	uploadLocation := fmt.Sprintf("%s/%s", organizationId, fileMetadata.Id)
-	err = s.objStorageRepository.SaveCdrFile(uploadLocation, size, file)
-	if err != nil {
-		//TODO: update file metadata status to UploadFailedFileProcessingStatus
-		return nil, err
+	if objStorageErr := s.objStorageRepository.SaveCdrFile(uploadLocation, size, file); objStorageErr != nil {
+		// If the file upload fails, update the file metadata with the failed status.
+		if databaseErr := s.databaseRepository.UploadFailed(fileMetadata.Id); databaseErr != nil {
+			return nil, databaseErr
+		}
+
+		fileMetadata.ProcessingStatus = UploadFailedFileProcessingStatus
+		return nil, objStorageErr
 	}
 
-	fileMetadata.Location = uploadLocation
+	// Update the file metadata with the successful status and the file location.
+	if databaseErr := s.databaseRepository.UploadSucceeded(fileMetadata.Id, uploadLocation); databaseErr != nil {
+		return nil, databaseErr
+	}
 	fileMetadata.ProcessingStatus = UploadSucceededFileProcessingStatus
-	err = s.databaseRepository.UpdateCdrFileMetadata(fileMetadata)
-	if err != nil {
-		return nil, err
-	}
 
-	err = s.publisher.PublishCdrFileUploaded(ctx, fileMetadata.Id)
-	if err != nil {
-		return nil, err
+	// Publish a message that the CDR file was successfully uploaded.
+	if publisherErr := s.publisher.PublishCdrFileUploaded(ctx, fileMetadata.Id); publisherErr != nil {
+		return nil, publisherErr
 	}
 	return fileMetadata, nil
 }
@@ -64,6 +63,20 @@ func NewService(
 		databaseRepository:   databaseRepository,
 		objStorageRepository: objStorageRepository,
 		publisher:            publisher,
+	}
+}
+
+// newFileMetadata represents the default initialisation of a CDR file metadata.
+func newFileMetadata(
+	organizationId string,
+	userId string,
+	title string,
+) *FileMetadata {
+	return &FileMetadata{
+		OrganizationId:   organizationId,
+		UserId:           userId,
+		Title:            title,
+		ProcessingStatus: CreatedFileProcessingStatus,
 	}
 }
 

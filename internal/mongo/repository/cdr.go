@@ -14,14 +14,14 @@ type mongoCdr struct {
 	database *mongo.Database
 }
 
-func (c *mongoCdr) CreateCdrFileMetadata(upload *cdr.FileMetadata) error {
+func (c *mongoCdr) CreateFileMetadata(upload *cdr.FileMetadata) error {
 	collection := c.database.Cim.Collection(cdrFileMetadata)
-	createCdrFileMetadata, err := data.ToCreateCdrFileMetadata(upload)
+	createFileMetadata, err := data.ToCreateFileMetadata(upload)
 	if err != nil {
 		return err
 	}
 
-	insertResult, err := collection.InsertOne(context.TODO(), createCdrFileMetadata)
+	insertResult, err := collection.InsertOne(context.TODO(), createFileMetadata)
 	if err != nil {
 		return err
 	}
@@ -31,16 +31,33 @@ func (c *mongoCdr) CreateCdrFileMetadata(upload *cdr.FileMetadata) error {
 	return nil
 }
 
-func (c *mongoCdr) UpdateCdrFileMetadata(upload *cdr.FileMetadata) error {
+func (c *mongoCdr) UploadSucceeded(id string, fileLocation string) error {
 	collection := c.database.Cim.Collection(cdrFileMetadata)
-	updateCdrFileMetadata := data.ToUpdateCdrFileMetadata(upload)
+	uploadSucceeded := data.ToUploadSucceeded(fileLocation)
 
-	objectId, err := bson.ObjectIDFromHex(upload.Id)
+	objectId, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	updateActions := bson.M{"$set": updateCdrFileMetadata}
+	updateActions := bson.M{"$set": uploadSucceeded}
+	_, err = collection.UpdateByID(context.TODO(), objectId, updateActions)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *mongoCdr) UploadFailed(id string) error {
+	collection := c.database.Cim.Collection(cdrFileMetadata)
+	uploadFailed := data.ToUploadFailed()
+
+	objectId, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	updateActions := bson.M{"$set": uploadFailed}
 	_, err = collection.UpdateByID(context.TODO(), objectId, updateActions)
 	if err != nil {
 		return err

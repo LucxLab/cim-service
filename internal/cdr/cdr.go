@@ -70,11 +70,14 @@ type Publisher interface {
 
 // DatabaseRepository defines methods that a CDR repository must implement to interact with the database.
 type DatabaseRepository interface {
-	// CreateCdrFileMetadata creates a new CDR file metadata in the database.
-	CreateCdrFileMetadata(fileMetadata *FileMetadata) error
+	// CreateFileMetadata creates a new CDR file metadata in the database.
+	CreateFileMetadata(fileMetadata *FileMetadata) error
 
-	// UpdateCdrFileMetadata updates an existing CDR file metadata in the database.
-	UpdateCdrFileMetadata(fileMetadata *FileMetadata) error
+	// UploadSucceeded updates the status of a CDR file metadata to UploadSucceededFileProcessingStatus and sets the file location.
+	UploadSucceeded(id string, fileLocation string) error
+
+	// UploadFailed updates the status of a CDR file metadata to UploadFailedFileProcessingStatus.
+	UploadFailed(id string) error
 }
 
 // ObjectStorageRepository defines methods that a CDR repository must implement to interact with the object storage.

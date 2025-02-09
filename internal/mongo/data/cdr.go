@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type CreateCdrFileMetadata struct {
+type CreateFileMetadata struct {
 	OrganizationId   bson.ObjectID `bson:"organization_id"`
 	UserId           bson.ObjectID `bson:"user_id"`
 	Title            string        `bson:"title"`
@@ -15,13 +15,18 @@ type CreateCdrFileMetadata struct {
 	UpdatedAt        string        `bson:"updated_at"`
 }
 
-type UpdateCdrFileMetadata struct {
+type UploadSucceeded struct {
 	Location         string `bson:"location"`
 	ProcessingStatus string `bson:"processing_status"`
 	UpdatedAt        string `bson:"updated_at"`
 }
 
-func ToCreateCdrFileMetadata(fileMetadata *cdr.FileMetadata) (*CreateCdrFileMetadata, error) {
+type UploadFailed struct {
+	ProcessingStatus string `bson:"processing_status"`
+	UpdatedAt        string `bson:"updated_at"`
+}
+
+func ToCreateFileMetadata(fileMetadata *cdr.FileMetadata) (*CreateFileMetadata, error) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	organizationObjectId, err := bson.ObjectIDFromHex(fileMetadata.OrganizationId)
 	if err != nil {
@@ -33,7 +38,7 @@ func ToCreateCdrFileMetadata(fileMetadata *cdr.FileMetadata) (*CreateCdrFileMeta
 		return nil, err
 	}
 
-	return &CreateCdrFileMetadata{
+	return &CreateFileMetadata{
 		OrganizationId:   organizationObjectId,
 		UserId:           userObjectId,
 		Title:            fileMetadata.Title,
@@ -43,11 +48,19 @@ func ToCreateCdrFileMetadata(fileMetadata *cdr.FileMetadata) (*CreateCdrFileMeta
 	}, nil
 }
 
-func ToUpdateCdrFileMetadata(upload *cdr.FileMetadata) *UpdateCdrFileMetadata {
+func ToUploadSucceeded(fileLocation string) *UploadSucceeded {
 	now := time.Now().UTC().Format(time.RFC3339)
-	return &UpdateCdrFileMetadata{
-		Location:         upload.Location,
-		ProcessingStatus: upload.ProcessingStatus.String(),
+	return &UploadSucceeded{
+		Location:         fileLocation,
+		ProcessingStatus: cdr.UploadSucceededFileProcessingStatus.String(),
+		UpdatedAt:        now,
+	}
+}
+
+func ToUploadFailed() *UploadFailed {
+	now := time.Now().UTC().Format(time.RFC3339)
+	return &UploadFailed{
+		ProcessingStatus: cdr.UploadFailedFileProcessingStatus.String(),
 		UpdatedAt:        now,
 	}
 }
