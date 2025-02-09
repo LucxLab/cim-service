@@ -1,6 +1,7 @@
 package cdr
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"strings"
@@ -13,6 +14,7 @@ type service struct {
 }
 
 func (s *service) UploadCdrFile(
+	ctx context.Context,
 	file io.Reader,
 	size int64,
 	fileName string,
@@ -46,7 +48,7 @@ func (s *service) UploadCdrFile(
 		return nil, err
 	}
 
-	err = s.publisher.PublishCdrFileUploaded(fileMetadata.Id)
+	err = s.publisher.PublishCdrFileUploaded(ctx, fileMetadata.Id)
 	if err != nil {
 		return nil, err
 	}

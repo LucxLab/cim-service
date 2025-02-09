@@ -1,6 +1,7 @@
 package cdr
 
 import (
+	"context"
 	"io"
 	"net/http"
 )
@@ -58,13 +59,13 @@ type Handler interface {
 // Service defines methods that a CDR service must implement to handle business logic.
 type Service interface {
 	// UploadCdrFile uploads a CDR file to the object storage and saves its metadata in the database.
-	UploadCdrFile(file io.Reader, size int64, fileName string, organizationId string, userId string) (*FileMetadata, error)
+	UploadCdrFile(ctx context.Context, file io.Reader, size int64, fileName string, organizationId string, userId string) (*FileMetadata, error)
 }
 
 // Publisher defines methods that a CDR publisher must implement to publish messages to a message broker.
 type Publisher interface {
 	// PublishCdrFileUploaded publishes a message to a message broker that a CDR file was uploaded.
-	PublishCdrFileUploaded(id string) error
+	PublishCdrFileUploaded(ctx context.Context, id string) error
 }
 
 // DatabaseRepository defines methods that a CDR repository must implement to interact with the database.

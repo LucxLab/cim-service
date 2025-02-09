@@ -1,8 +1,10 @@
 package publisher
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/LucxLab/cim-service/internal/cdr"
+	"github.com/LucxLab/cim-service/internal/constant"
 	"github.com/LucxLab/cim-service/internal/rabbitmq"
 	"github.com/LucxLab/cim-service/internal/rabbitmq/message"
 	"github.com/rabbitmq/amqp091-go"
@@ -14,16 +16,18 @@ type rabbitmqCdr struct {
 	publisher *rabbitmq.Publisher
 }
 
-func (r *rabbitmqCdr) PublishCdrFileUploaded(fileMetadataId string) error {
+func (r *rabbitmqCdr) PublishCdrFileUploaded(ctx context.Context, fileMetadataId string) error {
 	cdrFileUploadedMessage := message.ToCdrFileUploadedMessage(fileMetadataId)
 	rawMessage, err := json.Marshal(cdrFileUploadedMessage)
 	if err != nil {
 		return err
 	}
 
+	correlationId := ctx.Value(constant.CorrelationIdContextKey).(string)
 	publishingMessage := amqp091.Publishing{
-		ContentType: "text/json",
-		Body:        rawMessage,
+		ContentType:   "text/json",
+		Body:          rawMessage,
+		CorrelationId: correlationId,
 	}
 	err = r.publisher.Channel.Publish(
 		CdrFilesExchange,

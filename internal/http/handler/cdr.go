@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/LucxLab/cim-service/internal/cdr"
+	"github.com/LucxLab/cim-service/internal/constant"
 	"github.com/LucxLab/cim-service/internal/http/handler/response"
 	"net/http"
 )
@@ -11,13 +12,15 @@ type cdrHandler struct {
 }
 
 func (h *cdrHandler) UploadCdrFile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	organizationId := r.PathValue("organization_id")
 	if organizationId == "" {
 		response.BadRequest(w)
 		return
 	}
 
-	userId := r.Header.Get("X-User-Id")
+	userId := ctx.Value(constant.UserIdContextKey).(string)
 	if userId == "" {
 		response.BadRequest(w)
 		return
@@ -29,7 +32,7 @@ func (h *cdrHandler) UploadCdrFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileMetadata, err := h.service.UploadCdrFile(file, headers.Size, headers.Filename, organizationId, userId)
+	fileMetadata, err := h.service.UploadCdrFile(ctx, file, headers.Size, headers.Filename, organizationId, userId)
 	if err != nil {
 		response.UnexpectedError(w, err)
 		return
