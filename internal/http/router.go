@@ -15,6 +15,6 @@ func NewRouter(cdrService cdr.Service) *http.ServeMux {
 	router.Handle("/api/v1/", http.StripPrefix("/api/v1", apiV1Router))
 
 	cdrHandler := handler.NewCdrHandler(cdrService)
-	apiV1Router.HandleFunc("POST /organizations/{organization_id}/cdr-files", cdrHandler.UploadFile)
+	apiV1Router.HandleFunc("POST /organizations/{organization_id}/cdr-files", cdrHandler.UploadCdrFile)
 	return router
 }

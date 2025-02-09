@@ -2,14 +2,14 @@ package response
 
 import "github.com/LucxLab/cim-service/internal/cdr"
 
-type CreateUpload struct {
+type CdrFileUploaded struct {
 	Id     string `json:"id"`
 	Status string `json:"status"`
 }
 
-func ToCreatedUpload(upload *cdr.Upload) *CreateUpload {
-	return &CreateUpload{
+func ToCdrFileUploaded(upload *cdr.FileMetadata) *CdrFileUploaded {
+	return &CdrFileUploaded{
 		Id:     upload.Id,
-		Status: upload.Status.String(),
+		Status: upload.ProcessingStatus.String(),
 	}
 }

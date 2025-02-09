@@ -7,6 +7,7 @@ import (
 )
 
 const defaultHost = "localhost"
+const cimDatabase = "cim"
 
 type Database struct {
 	client *mongo.Client
@@ -31,6 +32,6 @@ func NewDatabase() *Database {
 	}
 	return &Database{
 		client: client,
-		Cim:    client.Database("cim"),
+		Cim:    client.Database(cimDatabase),
 	}
 }

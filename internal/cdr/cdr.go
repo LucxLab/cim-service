@@ -9,43 +9,40 @@ import (
 // Types
 */
 
-// Upload represents metadata of a CDR file upload.
-type Upload struct {
-	Id             string
-	OrganizationId string
-	UserId         string
-	Title          string
-	Location       string
-	Status         UploadStatus
-	CreatedAt      string
-	UpdatedAt      string
+// FileMetadata represents metadata of a CDR file.
+type FileMetadata struct {
+	Id               string
+	OrganizationId   string
+	UserId           string
+	Title            string
+	Location         string
+	ProcessingStatus FileProcessingStatus
+	CreatedAt        string
+	UpdatedAt        string
 }
 
-// UploadStatus represents the status of a CDR file upload.
-//
-// Possible values are "created", "succeeded", and "failed".
-type UploadStatus int
+// FileProcessingStatus represents the status of a CDR file processing.
+type FileProcessingStatus int
 
 const (
-	// CreatedUploadStatus represents the status of a CDR file upload when it is freshly created, but not yet uploaded.
-	CreatedUploadStatus UploadStatus = iota
+	// CreatedFileProcessingStatus represents the initial status of a CDR file when the upload starts, but it is not yet uploaded.
+	CreatedFileProcessingStatus FileProcessingStatus = iota
 
-	// SucceededUploadStatus represents the status of a CDR file upload when it is successfully uploaded.
-	SucceededUploadStatus
+	// UploadSucceededFileProcessingStatus represents the status of a CDR file successfully uploaded.
+	UploadSucceededFileProcessingStatus
 
-	// FailedUploadStatus represents the status of a CDR file upload when it fails to upload.
-	FailedUploadStatus
+	// UploadFailedFileProcessingStatus represents the status of a CDR file that failed to upload.
+	UploadFailedFileProcessingStatus
 )
 
-// String returns the string representation of the UploadStatus.
-func (s UploadStatus) String() string {
-	var uploadStatusesNames = map[UploadStatus]string{
-		CreatedUploadStatus:   "created",
-		SucceededUploadStatus: "succeeded",
-		FailedUploadStatus:    "failed",
+// String returns the string representation of the FileProcessingStatus.
+func (s FileProcessingStatus) String() string {
+	var fileProcessingStatusNames = map[FileProcessingStatus]string{
+		CreatedFileProcessingStatus:         "upload_created",
+		UploadSucceededFileProcessingStatus: "upload_succeeded",
+		UploadFailedFileProcessingStatus:    "upload_failed",
 	}
-
-	return uploadStatusesNames[s]
+	return fileProcessingStatusNames[s]
 }
 
 /*
@@ -54,21 +51,33 @@ func (s UploadStatus) String() string {
 
 // Handler defines methods that a CDR handler must implement to handle HTTP requests.
 type Handler interface {
-	UploadFile(w http.ResponseWriter, r *http.Request)
+	// UploadCdrFile handles the HTTP request to upload a CDR file.
+	UploadCdrFile(writer http.ResponseWriter, request *http.Request)
 }
 
-// Publisher defines methods that a CDR publisher must implement to publish messages.
+// Service defines methods that a CDR service must implement to handle business logic.
+type Service interface {
+	// UploadCdrFile uploads a CDR file to the object storage and saves its metadata in the database.
+	UploadCdrFile(file io.Reader, size int64, fileName string, organizationId string, userId string) (*FileMetadata, error)
+}
+
+// Publisher defines methods that a CDR publisher must implement to publish messages to a message broker.
 type Publisher interface {
-	PublishUploadCreated(upload *Upload) error
+	// PublishCdrFileUploaded publishes a message to a message broker that a CDR file was uploaded.
+	PublishCdrFileUploaded(id string) error
 }
 
 // DatabaseRepository defines methods that a CDR repository must implement to interact with the database.
 type DatabaseRepository interface {
-	CreateUpload(upload *Upload) error
-	UpdateUpload(upload *Upload) error
+	// CreateCdrFileMetadata creates a new CDR file metadata in the database.
+	CreateCdrFileMetadata(fileMetadata *FileMetadata) error
+
+	// UpdateCdrFileMetadata updates an existing CDR file metadata in the database.
+	UpdateCdrFileMetadata(fileMetadata *FileMetadata) error
 }
 
 // ObjectStorageRepository defines methods that a CDR repository must implement to interact with the object storage.
 type ObjectStorageRepository interface {
+	// SaveCdrFile saves a CDR file in the object storage.
 	SaveCdrFile(objectName string, objectSize int64, reader io.Reader) error
 }

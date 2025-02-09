@@ -8,29 +8,29 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
+const CdrFilesExchange = "cdr_files"
+
 type rabbitmqCdr struct {
 	publisher *rabbitmq.Publisher
 }
 
-func (r *rabbitmqCdr) PublishUploadCreated(upload *cdr.Upload) error {
-	exchange := "cim"
-	routingKey := "cdr_file_uploaded"
-
-	cdrFileUploadedMessage := message.ToCdrFileUploaded(upload)
-	jsonMessage, err := json.Marshal(cdrFileUploadedMessage)
+func (r *rabbitmqCdr) PublishCdrFileUploaded(fileMetadataId string) error {
+	cdrFileUploadedMessage := message.ToCdrFileUploadedMessage(fileMetadataId)
+	rawMessage, err := json.Marshal(cdrFileUploadedMessage)
 	if err != nil {
 		return err
 	}
 
+	publishingMessage := amqp091.Publishing{
+		ContentType: "text/json",
+		Body:        rawMessage,
+	}
 	err = r.publisher.Channel.Publish(
-		exchange,
-		routingKey,
+		CdrFilesExchange,
+		message.CdrFileUploadedType,
 		false,
 		false,
-		amqp091.Publishing{
-			ContentType: "text/json",
-			Body:        jsonMessage,
-		},
+		publishingMessage,
 	)
 	if err != nil {
 		return err

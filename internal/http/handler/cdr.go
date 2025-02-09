@@ -10,7 +10,7 @@ type cdrHandler struct {
 	service cdr.Service
 }
 
-func (h *cdrHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
+func (h *cdrHandler) UploadCdrFile(w http.ResponseWriter, r *http.Request) {
 	organizationId := r.PathValue("organization_id")
 	if organizationId == "" {
 		response.BadRequest(w)
@@ -29,14 +29,14 @@ func (h *cdrHandler) UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upload, err := h.service.UploadFile(file, headers.Size, headers.Filename, organizationId, userId)
+	fileMetadata, err := h.service.UploadCdrFile(file, headers.Size, headers.Filename, organizationId, userId)
 	if err != nil {
 		response.UnexpectedError(w, err)
 		return
 	}
 
-	createdUploadResponse := response.ToCreatedUpload(upload)
-	err = response.Json(w, http.StatusCreated, createdUploadResponse)
+	cdrFileUploadedResponse := response.ToCdrFileUploaded(fileMetadata)
+	err = response.Json(w, http.StatusCreated, cdrFileUploadedResponse)
 	if err != nil {
 		response.UnexpectedError(w, err)
 		return

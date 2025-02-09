@@ -36,7 +36,7 @@ func New(address string) Server {
 	rabbitmqPublisher := rabbitmq.NewPublisher()
 
 	// Database Repositories
-	cdrDatabaseRepository := dbRepository.NewMongoCDR(mongoDatabase)
+	cdrDatabaseRepository := dbRepository.NewMongoCdr(mongoDatabase)
 
 	// Object Storage Repositories
 	cdrObjStorageRepository := objStorageRepository.NewMinioCdr(minioObjectStorage)

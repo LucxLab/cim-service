@@ -3,48 +3,51 @@ package data
 import (
 	"github.com/LucxLab/cim-service/internal/cdr"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"time"
 )
 
-type CreateUpload struct {
-	OrganizationId bson.ObjectID `bson:"organization_id"`
-	UserId         bson.ObjectID `bson:"user_id"`
-	Title          string        `bson:"title"`
-	Status         string        `bson:"status"`
-	CreatedAt      string        `bson:"created_at"`
-	UpdatedAt      string        `bson:"updated_at"`
+type CreateCdrFileMetadata struct {
+	OrganizationId   bson.ObjectID `bson:"organization_id"`
+	UserId           bson.ObjectID `bson:"user_id"`
+	Title            string        `bson:"title"`
+	ProcessingStatus string        `bson:"processing_status"`
+	CreatedAt        string        `bson:"created_at"`
+	UpdatedAt        string        `bson:"updated_at"`
 }
 
-type UpdateUpload struct {
-	Location  string `bson:"location"`
-	Status    string `bson:"status"`
-	UpdatedAt string `bson:"updated_at"`
+type UpdateCdrFileMetadata struct {
+	Location         string `bson:"location"`
+	ProcessingStatus string `bson:"processing_status"`
+	UpdatedAt        string `bson:"updated_at"`
 }
 
-func ToCreateUpload(upload *cdr.Upload) (*CreateUpload, error) {
-	organizationObjectId, err := bson.ObjectIDFromHex(upload.OrganizationId)
+func ToCreateCdrFileMetadata(fileMetadata *cdr.FileMetadata) (*CreateCdrFileMetadata, error) {
+	now := time.Now().UTC().Format(time.RFC3339)
+	organizationObjectId, err := bson.ObjectIDFromHex(fileMetadata.OrganizationId)
 	if err != nil {
 		return nil, err
 	}
 
-	userObjectId, err := bson.ObjectIDFromHex(upload.UserId)
+	userObjectId, err := bson.ObjectIDFromHex(fileMetadata.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CreateUpload{
-		OrganizationId: organizationObjectId,
-		UserId:         userObjectId,
-		Title:          upload.Title,
-		Status:         upload.Status.String(),
-		CreatedAt:      upload.CreatedAt,
-		UpdatedAt:      upload.UpdatedAt,
+	return &CreateCdrFileMetadata{
+		OrganizationId:   organizationObjectId,
+		UserId:           userObjectId,
+		Title:            fileMetadata.Title,
+		ProcessingStatus: fileMetadata.ProcessingStatus.String(),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}, nil
 }
 
-func ToUpdateUpload(upload *cdr.Upload) *UpdateUpload {
-	return &UpdateUpload{
-		Location:  upload.Location,
-		Status:    upload.Status.String(),
-		UpdatedAt: upload.UpdatedAt,
+func ToUpdateCdrFileMetadata(upload *cdr.FileMetadata) *UpdateCdrFileMetadata {
+	now := time.Now().UTC().Format(time.RFC3339)
+	return &UpdateCdrFileMetadata{
+		Location:         upload.Location,
+		ProcessingStatus: upload.ProcessingStatus.String(),
+		UpdatedAt:        now,
 	}
 }

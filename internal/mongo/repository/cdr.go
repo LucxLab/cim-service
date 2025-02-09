@@ -8,20 +8,20 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const cdrUploadCollection = "cdr_files"
+const cdrFileMetadata = "cdr_files_metadata"
 
 type mongoCdr struct {
 	database *mongo.Database
 }
 
-func (c *mongoCdr) CreateUpload(upload *cdr.Upload) error {
-	collection := c.database.Cim.Collection(cdrUploadCollection)
-	createUploadData, err := data.ToCreateUpload(upload)
+func (c *mongoCdr) CreateCdrFileMetadata(upload *cdr.FileMetadata) error {
+	collection := c.database.Cim.Collection(cdrFileMetadata)
+	createCdrFileMetadata, err := data.ToCreateCdrFileMetadata(upload)
 	if err != nil {
 		return err
 	}
 
-	insertResult, err := collection.InsertOne(context.TODO(), createUploadData)
+	insertResult, err := collection.InsertOne(context.TODO(), createCdrFileMetadata)
 	if err != nil {
 		return err
 	}
@@ -31,23 +31,23 @@ func (c *mongoCdr) CreateUpload(upload *cdr.Upload) error {
 	return nil
 }
 
-func (c *mongoCdr) UpdateUpload(upload *cdr.Upload) error {
-	collection := c.database.Cim.Collection(cdrUploadCollection)
-	updateUploadData := data.ToUpdateUpload(upload)
+func (c *mongoCdr) UpdateCdrFileMetadata(upload *cdr.FileMetadata) error {
+	collection := c.database.Cim.Collection(cdrFileMetadata)
+	updateCdrFileMetadata := data.ToUpdateCdrFileMetadata(upload)
 
 	objectId, err := bson.ObjectIDFromHex(upload.Id)
 	if err != nil {
 		return err
 	}
 
-	updateAction := bson.M{"$set": updateUploadData}
-	_, err = collection.UpdateByID(context.TODO(), objectId, updateAction)
+	updateActions := bson.M{"$set": updateCdrFileMetadata}
+	_, err = collection.UpdateByID(context.TODO(), objectId, updateActions)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewMongoCDR(database *mongo.Database) cdr.DatabaseRepository {
+func NewMongoCdr(database *mongo.Database) cdr.DatabaseRepository {
 	return &mongoCdr{database: database}
 }
