@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"github.com/LucxLab/cim-service/internal/health"
@@ -12,6 +12,6 @@ func (h handler) GlobalStatus(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write([]byte(`{"status": "ok"}`))
 }
 
-func NewHealthHandler() health.Handler {
+func NewHealth() health.Handler {
 	return &handler{}
 }

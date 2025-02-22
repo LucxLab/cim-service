@@ -2,13 +2,13 @@ package http
 
 import (
 	"fmt"
-	"github.com/LucxLab/cim-service/internal/cdr"
 	"github.com/LucxLab/cim-service/internal/minio"
-	objStorageRepository "github.com/LucxLab/cim-service/internal/minio/repository"
+	objStorageRepository "github.com/LucxLab/cim-service/internal/minio/repositories"
 	"github.com/LucxLab/cim-service/internal/mongo"
-	dbRepository "github.com/LucxLab/cim-service/internal/mongo/repository"
+	dbRepository "github.com/LucxLab/cim-service/internal/mongo/repositories"
 	"github.com/LucxLab/cim-service/internal/rabbitmq"
-	"github.com/LucxLab/cim-service/internal/rabbitmq/publisher"
+	"github.com/LucxLab/cim-service/internal/rabbitmq/publishers"
+	"github.com/LucxLab/cim-service/internal/upload"
 	"net/http"
 )
 
@@ -42,12 +42,12 @@ func New(address string) Server {
 	cdrObjStorageRepository := objStorageRepository.NewMinioCdr(minioObjectStorage)
 
 	// Publishers
-	cdrPublisher := publisher.NewRabbitmqCdr(rabbitmqPublisher)
+	cdrPublisher := publishers.NewRabbitmqCdr(rabbitmqPublisher)
 
-	// Services
-	cdrService := cdr.NewService(cdrDatabaseRepository, cdrObjStorageRepository, cdrPublisher)
+	// UseCases
+	uploadUseCase := upload.NewUseCase(cdrDatabaseRepository, cdrObjStorageRepository, cdrPublisher)
 
-	router := NewRouter(cdrService)
+	router := NewRouter(uploadUseCase)
 	return &server{
 		http: &http.Server{
 			Addr:    address,

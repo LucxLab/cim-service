@@ -1,29 +1,29 @@
-package publisher
+package publishers
 
 import (
 	"context"
 	"encoding/json"
-	"github.com/LucxLab/cim-service/internal/cdr"
-	"github.com/LucxLab/cim-service/internal/constant"
+	"github.com/LucxLab/cim-service/internal/publishers"
 	"github.com/LucxLab/cim-service/internal/rabbitmq"
 	"github.com/LucxLab/cim-service/internal/rabbitmq/message"
 	"github.com/rabbitmq/amqp091-go"
 )
 
 const CdrFilesExchange = "cdr_files"
+const CorrelationIdKey = "correlation_id"
 
 type rabbitmqCdr struct {
 	publisher *rabbitmq.Publisher
 }
 
-func (r *rabbitmqCdr) PublishCdrFileUploaded(ctx context.Context, fileMetadataId string) error {
-	cdrFileUploadedMessage := message.ToCdrFileUploadedMessage(fileMetadataId)
-	rawMessage, err := json.Marshal(cdrFileUploadedMessage)
+func (r *rabbitmqCdr) PublishFileProcessCommand(ctx context.Context, fileMetadataId string) error {
+	cdrFileProcessCommand := message.NewCdrFileProcessCommand(fileMetadataId)
+	rawMessage, err := json.Marshal(cdrFileProcessCommand)
 	if err != nil {
 		return err
 	}
 
-	correlationId := ctx.Value(constant.CorrelationIdContextKey).(string)
+	correlationId := ctx.Value(CorrelationIdKey).(string)
 	publishingMessage := amqp091.Publishing{
 		ContentType:   "text/json",
 		Body:          rawMessage,
@@ -31,7 +31,7 @@ func (r *rabbitmqCdr) PublishCdrFileUploaded(ctx context.Context, fileMetadataId
 	}
 	err = r.publisher.Channel.Publish(
 		CdrFilesExchange,
-		message.CdrFileUploadedType,
+		message.CdrFileProcessCommandType,
 		false,
 		false,
 		publishingMessage,
@@ -42,7 +42,7 @@ func (r *rabbitmqCdr) PublishCdrFileUploaded(ctx context.Context, fileMetadataId
 	return nil
 }
 
-func NewRabbitmqCdr(publisher *rabbitmq.Publisher) cdr.Publisher {
+func NewRabbitmqCdr(publisher *rabbitmq.Publisher) publishers.Cdr {
 	return &rabbitmqCdr{
 		publisher: publisher,
 	}

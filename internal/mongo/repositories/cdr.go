@@ -1,10 +1,11 @@
-package repository
+package repositories
 
 import (
 	"context"
-	"github.com/LucxLab/cim-service/internal/cdr"
 	"github.com/LucxLab/cim-service/internal/mongo"
 	"github.com/LucxLab/cim-service/internal/mongo/data"
+	"github.com/LucxLab/cim-service/internal/repositories"
+	"github.com/LucxLab/cim-service/internal/upload"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -14,26 +15,26 @@ type mongoCdr struct {
 	database *mongo.Database
 }
 
-func (c *mongoCdr) CreateFileMetadata(upload *cdr.FileMetadata) error {
+func (c *mongoCdr) CreateMetadata(fileCreation *upload.FileCreation) (id string, err error) {
 	collection := c.database.Cim.Collection(cdrFileMetadata)
-	createFileMetadata, err := data.ToCreateFileMetadata(upload)
-	if err != nil {
-		return err
+
+	metadataCreation, adapterErr := data.NewFileMetadataCreation(fileCreation)
+	if adapterErr != nil {
+		return "", adapterErr
 	}
 
-	insertResult, err := collection.InsertOne(context.TODO(), createFileMetadata)
-	if err != nil {
-		return err
+	insertResult, insertErr := collection.InsertOne(context.TODO(), metadataCreation)
+	if insertErr != nil {
+		return "", insertErr
 	}
 
 	objectId := insertResult.InsertedID.(bson.ObjectID)
-	upload.Id = objectId.Hex()
-	return nil
+	return objectId.Hex(), nil
 }
 
 func (c *mongoCdr) UploadSucceeded(id string, fileLocation string) error {
 	collection := c.database.Cim.Collection(cdrFileMetadata)
-	uploadSucceeded := data.ToUploadSucceeded(fileLocation)
+	uploadSucceeded := data.NewFileUploadSucceeded(fileLocation)
 
 	objectId, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -50,7 +51,7 @@ func (c *mongoCdr) UploadSucceeded(id string, fileLocation string) error {
 
 func (c *mongoCdr) UploadFailed(id string) error {
 	collection := c.database.Cim.Collection(cdrFileMetadata)
-	uploadFailed := data.ToUploadFailed()
+	uploadFailed := data.NewFileUploadFailed()
 
 	objectId, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -65,6 +66,6 @@ func (c *mongoCdr) UploadFailed(id string) error {
 	return nil
 }
 
-func NewMongoCdr(database *mongo.Database) cdr.DatabaseRepository {
+func NewMongoCdr(database *mongo.Database) repositories.CdrDatabase {
 	return &mongoCdr{database: database}
 }

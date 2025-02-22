@@ -1,66 +1,67 @@
 package data
 
 import (
-	"github.com/LucxLab/cim-service/internal/cdr"
+	"github.com/LucxLab/cim-service/internal/upload"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"time"
 )
 
-type CreateFileMetadata struct {
-	OrganizationId   bson.ObjectID `bson:"organization_id"`
-	UserId           bson.ObjectID `bson:"user_id"`
-	Title            string        `bson:"title"`
-	ProcessingStatus string        `bson:"processing_status"`
-	CreatedAt        string        `bson:"created_at"`
-	UpdatedAt        string        `bson:"updated_at"`
+type FileMetadataCreation struct {
+	OrganizationId bson.ObjectID `bson:"organization_id"`
+	UserId         bson.ObjectID `bson:"user_id"`
+	Name           string        `bson:"name"`
+	Status         string        `bson:"status"`
+	CreatedAt      string        `bson:"created_at"`
+	UpdatedAt      string        `bson:"updated_at"`
 }
 
-type UploadSucceeded struct {
-	Location         string `bson:"location"`
-	ProcessingStatus string `bson:"processing_status"`
-	UpdatedAt        string `bson:"updated_at"`
+type FileUploadSucceeded struct {
+	Path      string `bson:"path"`
+	Status    string `bson:"status"`
+	UpdatedAt string `bson:"updated_at"`
 }
 
-type UploadFailed struct {
-	ProcessingStatus string `bson:"processing_status"`
-	UpdatedAt        string `bson:"updated_at"`
+type FileUploadFailed struct {
+	Status    string `bson:"status"`
+	UpdatedAt string `bson:"updated_at"`
 }
 
-func ToCreateFileMetadata(fileMetadata *cdr.FileMetadata) (*CreateFileMetadata, error) {
+func NewFileMetadataCreation(fileCreation *upload.FileCreation) (*FileMetadataCreation, error) {
 	now := time.Now().UTC().Format(time.RFC3339)
-	organizationObjectId, err := bson.ObjectIDFromHex(fileMetadata.OrganizationId)
+
+	organizationObjectId, err := bson.ObjectIDFromHex(fileCreation.OrganizationId)
 	if err != nil {
 		return nil, err
 	}
 
-	userObjectId, err := bson.ObjectIDFromHex(fileMetadata.UserId)
+	userObjectId, err := bson.ObjectIDFromHex(fileCreation.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CreateFileMetadata{
-		OrganizationId:   organizationObjectId,
-		UserId:           userObjectId,
-		Title:            fileMetadata.Title,
-		ProcessingStatus: fileMetadata.ProcessingStatus.String(),
-		CreatedAt:        now,
-		UpdatedAt:        now,
+	return &FileMetadataCreation{
+		OrganizationId: organizationObjectId,
+		UserId:         userObjectId,
+		Name:           fileCreation.FileName,
+		Status:         upload.CreatedFileUploadStatus.String(),
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}, nil
 }
 
-func ToUploadSucceeded(fileLocation string) *UploadSucceeded {
+func NewFileUploadSucceeded(fileLocation string) *FileUploadSucceeded {
 	now := time.Now().UTC().Format(time.RFC3339)
-	return &UploadSucceeded{
-		Location:         fileLocation,
-		ProcessingStatus: cdr.UploadSucceededFileProcessingStatus.String(),
-		UpdatedAt:        now,
+	return &FileUploadSucceeded{
+		Path:      fileLocation,
+		Status:    upload.SucceededFileUploadStatus.String(),
+		UpdatedAt: now,
 	}
 }
 
-func ToUploadFailed() *UploadFailed {
+func NewFileUploadFailed() *FileUploadFailed {
 	now := time.Now().UTC().Format(time.RFC3339)
-	return &UploadFailed{
-		ProcessingStatus: cdr.UploadFailedFileProcessingStatus.String(),
-		UpdatedAt:        now,
+	return &FileUploadFailed{
+		Status:    upload.FailedFileUploadStatus.String(),
+		UpdatedAt: now,
 	}
 }

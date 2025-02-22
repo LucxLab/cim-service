@@ -1,9 +1,9 @@
-package repository
+package repositories
 
 import (
 	"context"
-	"github.com/LucxLab/cim-service/internal/cdr"
 	"github.com/LucxLab/cim-service/internal/minio"
+	"github.com/LucxLab/cim-service/internal/repositories"
 	mn "github.com/minio/minio-go/v7"
 	"io"
 )
@@ -22,7 +22,7 @@ func (m *minioCdr) SaveCdrFile(objectName string, objectSize int64, reader io.Re
 	return nil
 }
 
-func NewMinioCdr(storage *minio.ObjectStorage) cdr.ObjectStorageRepository {
+func NewMinioCdr(storage *minio.ObjectStorage) repositories.CdrObjectStorage {
 	return &minioCdr{
 		storage: storage,
 	}

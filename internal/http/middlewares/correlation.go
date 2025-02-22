@@ -1,13 +1,13 @@
-package middleware
+package middlewares
 
 import (
 	"context"
-	"github.com/LucxLab/cim-service/internal/constant"
 	"github.com/google/uuid"
 	"net/http"
 )
 
 const correlationIdHeader = "X-Correlation-Id"
+const correlationIdContextKey = "correlation_id"
 
 func CorrelationId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -17,7 +17,7 @@ func CorrelationId(next http.Handler) http.Handler {
 			correlationId = uuid.New().String()
 		}
 
-		ctx = context.WithValue(ctx, constant.CorrelationIdContextKey, correlationId)
+		ctx = context.WithValue(ctx, correlationIdContextKey, correlationId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

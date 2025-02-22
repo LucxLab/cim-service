@@ -3,7 +3,9 @@ module github.com/LucxLab/cim-service
 go 1.23.4
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/minio/minio-go/v7 v7.0.83
+	github.com/rabbitmq/amqp091-go v1.10.0
 	go.mongodb.org/mongo-driver/v2 v2.0.0
 )
 
@@ -12,12 +14,10 @@ require (
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
