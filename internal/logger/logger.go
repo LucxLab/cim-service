@@ -49,11 +49,16 @@ func (l *zapLogger) Close() error {
 func New(isDevelopment bool) (Logger, error) {
 	var logger *zap.Logger
 	var loggerErr error
+	var utcClock = newUtcClock()
 
 	if isDevelopment {
-		logger, loggerErr = zap.NewDevelopment()
+		logger, loggerErr = zap.NewDevelopment(
+			zap.WithClock(utcClock),
+		)
 	} else {
-		logger, loggerErr = zap.NewProduction()
+		logger, loggerErr = zap.NewProduction(
+			zap.WithClock(utcClock),
+		)
 	}
 	if loggerErr != nil {
 		return nil, loggerErr
