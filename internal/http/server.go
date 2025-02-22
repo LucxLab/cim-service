@@ -20,7 +20,6 @@ type Server interface {
 
 type server struct {
 	http          *http.Server
-	logger        logger.Logger
 	mongoDatabase *mongo.Database
 }
 
@@ -30,21 +29,13 @@ func (s *server) Listen() error {
 }
 
 func (s *server) Close() error {
-	if loggerErr := s.logger.Close(); loggerErr != nil {
-		return loggerErr
-	}
 	if mongoErr := s.mongoDatabase.Close(); mongoErr != nil {
 		return mongoErr
 	}
 	return nil
 }
 
-func New(address string) Server {
-	serverLogger, loggerErr := logger.New(true)
-	if loggerErr != nil {
-		panic(loggerErr)
-	}
-
+func New(address string, logger logger.Logger) Server {
 	mongoDatabase := mongo.NewDatabase()
 	minioObjectStorage := minio.NewStorage()
 	rabbitmqPublisher := rabbitmq.NewPublisher()
@@ -59,7 +50,7 @@ func New(address string) Server {
 	cdrPublisher := publishers.NewRabbitmqCdr(rabbitmqPublisher)
 
 	// UseCases
-	uploadUseCase := upload.NewUseCase(cdrDatabaseRepository, cdrObjStorageRepository, cdrPublisher, serverLogger)
+	uploadUseCase := upload.NewUseCase(cdrDatabaseRepository, cdrObjStorageRepository, cdrPublisher, logger)
 
 	router := NewRouter(uploadUseCase)
 	return &server{
@@ -67,7 +58,6 @@ func New(address string) Server {
 			Addr:    address,
 			Handler: router,
 		},
-		logger:        serverLogger,
 		mongoDatabase: mongoDatabase,
 	}
 }
